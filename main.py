@@ -12,12 +12,12 @@ def prediction(problem_input, solution_input, type='single'):
     zsl_solution = inference_zeroshot(solution_input)
     explanation = None
     if type == 'single':
-        gemini_solution = calculate_gemini_scores(problem_input, solution_input)
+        gemini_solution = calculate_gemini_scores_and_explanations(problem_input, solution_input)
         explanation = gemini_solution['explanation']
         st.write(explanation)
         gemini_solution = {k: gemini_solution[k] for k in gemini_solution.keys() if k != 'explanation'}
     else:
-        gemini_solution = calculate_gemini_scores_and_explanations(problem_input, solution_input)
+        gemini_solution = calculate_gemini_scores(problem_input, solution_input)
     zsl_solution['relevance to problem'] = nlp_solution['relevance to problem']
     gemini_solution['relevance to problem'] = nlp_solution['relevance to problem']
     # put relevanve to problem first
@@ -83,10 +83,10 @@ def main():
     with st.expander("How are scores calculated?"):
         st.write('''
             We combine the results of the 3 following methods:
-            - Zero-shot classification model using BART-large-mnli
-            - Gemini model API
-            - NLP and text analysis techniques
-                 ''')        
+            - Zero-Shot Classification Model Using BART-Large-MNLI: in our application, this model interprets the user's text input and evaluates it against predefined labels, even if those labels were not present in the model's training data. This offers flexibility and broad applicability in understanding and categorizing diverse solution statements
+            - Gemini Model API: this model is good at assessing the solution's tone, context, and underlying assumptions, providing a nuanced understanding that contributes to the overall score
+            - NLP and Text Analysis Techniques: we employ a range of Natural Language Processing (NLP) and text analysis techniques to deeply analyze the solution text
+        ''')        
 
 if __name__ == "__main__":
     main()
