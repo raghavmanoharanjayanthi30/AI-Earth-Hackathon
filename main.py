@@ -6,6 +6,8 @@ from nlp_model import compute_overall_rating
 from gemini_model import calculate_gemini_scores, generate_explanations
 
 
+st.set_page_config(layout="wide")
+
 def prediction(problem_input, solution_input):
     ''' Format is: {'novelty': 1, 'scalability': 1, 'feasibility': 1, 'impact': 1, 'market potential': 1, 'adherence to circular economy principles': 1} '''
     nlp_solution = compute_overall_rating(problem_input, solution_input)
@@ -49,9 +51,16 @@ def main():
             df_scores = pd.DataFrame.from_dict(scores, orient='index')
             # add total score column
             df_scores['total_score'] = df_scores.sum(axis=1)
-            df_scores.columns = ['novelty', 'scalability', 'feasibility', 'impact', 'market potential', 'adherence to circular economy principles', 'total_score']
+            df_scores.columns = ['relevance to problem', 'novelty', 'scalability', 'feasibility', 'impact', 'market potential', 'adherence to circular economy principles', 'total_score']
             df = pd.concat([df, df_scores], axis=1)
             st.dataframe(df)
+            # button to download the csv file
+            st.download_button(
+                label="Download CSV",
+                data=df.to_csv().encode("utf-8"),
+                file_name="ai_earthhack_scores.csv",
+                mime="text/csv",
+            )
 
         else:
             if user_input:
