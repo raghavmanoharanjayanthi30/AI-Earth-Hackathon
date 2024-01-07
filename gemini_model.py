@@ -62,6 +62,15 @@ def parse_array(string):
   return elements
 
 
+def generate_explanations(scores, problem, solution):
+    
+    explanations = {}
+    
+    for metric in scores:
+        explanations[metric] = model.generate_content(f'Given the following input problem-solution pair, give a single paragraph explanation for why the solution ranks a score of {scores[metric]} on a scale of 1-3 in terms of its {metric}.\n\nProblem: {problem}\n\nSolution: {solution}').text
+
+    return explanations
+
 
 
 # # Testing
@@ -73,7 +82,11 @@ def parse_array(string):
 
 #     # print(calculate_gemini_scores_and_explanations(problem, solution))
 
-#     output_scores = calculate_gemini_scores_and_explanations(problem, solution)
+#     # output_scores = calculate_gemini_scores_and_explanations(problem, solution)
 
-#     for key in output_scores:
-#         print(key, "->", output_scores[key][1])
+#     # for key in output_scores:
+#     #     print(key, "->", output_scores[key][1])
+
+#     generated_explanations = generate_explanations({"novelty": 3, "scalability": 2, "feasibility": 1, "impact": 3, "market potential": 1, "adherence to circular economy principles": 2}, problem, solution)
+
+#     print(generated_explanations)
