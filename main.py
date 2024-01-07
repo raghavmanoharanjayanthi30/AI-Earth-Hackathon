@@ -13,9 +13,10 @@ def prediction(problem_input, solution_input, type='single'):
     explanation = None
     if type == 'single':
         gemini_solution = calculate_gemini_scores_and_explanations(problem_input, solution_input)
-        explanation = gemini_solution['explanation']
-        st.write(explanation)
-        gemini_solution = {k: gemini_solution[k] for k in gemini_solution.keys() if k != 'explanation'}
+        explanation = dict()
+        for k in gemini_solution.keys():
+            explanation[k] = gemini_solution[k][1]
+        gemini_solution = {k: int(gemini_solution[k][0]) for k in gemini_solution.keys() if k != 'explanation'}
     else:
         gemini_solution = calculate_gemini_scores(problem_input, solution_input)
     zsl_solution['relevance to problem'] = nlp_solution['relevance to problem']
@@ -76,8 +77,13 @@ def main():
             total_score = sum(scores.values())
             animation(total_score, "Total Score (from 0 to 21)", "green")
             # Display explanation
-            st.subheader("Explanation:")
-            st.write(explanation)
+            with st.expander("See explanation"):
+                for criterion, explanation in explanation.items():
+                    # remove " " from beginning and end of string if it exists
+                    explanation = explanation.strip()
+                    if explanation[0] == '"' and explanation[-1] == '"':
+                        explanation = explanation[1:-1]
+                    st.write(f"**{criterion.capitalize()}**: {explanation}")
 
     # section to explain how scores are calculated
     with st.expander("How are scores calculated?"):
