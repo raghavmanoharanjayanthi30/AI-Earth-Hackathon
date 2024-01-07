@@ -5,4 +5,4 @@ htbuilder
 sentence_transformers
 spacy
 google.generativeai
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.2/en_core_web_sm-3.7.2-py3-none-any.whl
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0-py3-none-any.whl
