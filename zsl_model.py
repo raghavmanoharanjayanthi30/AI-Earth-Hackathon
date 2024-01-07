@@ -8,14 +8,14 @@ df = pd.read_csv('data/AI EarthHack Dataset.csv', encoding='latin1')
 classifier = pipeline("zero-shot-classification",
                       model="facebook/bart-large-mnli")
 
-metrics = ["Novelty", "Scalability", "Feasibility", "Impact", "Market potential", "Adherence to circular economy principles"]
+metrics = ["novelty", "scalability", "feasibility", "impact", "market potential", "adherence to circular economy principles"]
 candidate_labels_dic = {
-    "Novelty": ["Not a novel solution", "Novel solution", "Highly novel solution"],
-    "Scalability": ["Not a scalable solution", "Scalable solution ", "Highly scalable solution"],
-    "Feasibility": ["Not a feasible solution", "Feasible solution", "Highly feasible solution"],
-    "Impact": ["Not an impactful solution", "Impactful solution", "Highly impactful solution"],
-    "Market potential": ["Not a marketable solution", "Marketable solution", "Highly marketable solution"],
-    "Adherence to circular economy principles": ["Solution does not adhere to circular economy principles", "Solution adheres to circular economy principles", "Solution highly adheres to circular economy principles"],
+    "novelty": ["Not a novel solution", "Novel solution", "Highly novel solution"],
+    "scalability": ["Not a scalable solution", "Scalable solution ", "Highly scalable solution"],
+    "feasibility": ["Not a feasible solution", "Feasible solution", "Highly feasible solution"],
+    "impact": ["Not an impactful solution", "Impactful solution", "Highly impactful solution"],
+    "market potential": ["Not a marketable solution", "Marketable solution", "Highly marketable solution"],
+    "adherence to circular economy principles": ["Solution does not adhere to circular economy principles", "Solution adheres to circular economy principles", "Solution highly adheres to circular economy principles"],
 }
 
 def inference_zeroshot(text_solution):

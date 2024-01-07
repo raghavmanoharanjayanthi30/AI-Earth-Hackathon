@@ -2,11 +2,22 @@ import streamlit as st
 import pandas as pd
 from utils import *
 from zsl_model import inference_zeroshot
+from nlp_model import compute_overall_rating
 
 
-def prediction(text):
+def prediction(problem_input, solution_input):
     ''' Format is: {'novelty': 1, 'scalability': 1, 'feasibility': 1, 'impact': 1, 'market potential': 1, 'adherence to circular economy principles': 1} '''
-    return inference_zeroshot(text)
+    nlp_solution = compute_overall_rating(problem_input, solution_input)
+    print(nlp_solution)
+    zsl_solution = inference_zeroshot(solution_input)
+    print(zsl_solution)
+    zsl_solution['relevance to problem'] = nlp_solution['relevance to problem']
+    # put relevanve to problem first
+    zsl_solution = {k: zsl_solution[k] for k in ['relevance to problem', 'novelty', 'scalability', 'feasibility', 'impact', 'market potential', 'adherence to circular economy principles']}
+    # take the average of the 2 models
+    for key in zsl_solution.keys():
+        zsl_solution[key] = (zsl_solution[key] + nlp_solution[key]) / 2
+    return zsl_solution
 
 # Streamlit interface
 def main():
@@ -29,23 +40,28 @@ def main():
             scores = {}
             for index, row in df.iterrows():
                 scores[index] = prediction(row['solution'])
-            st.write(scores)
+            df_scores = pd.DataFrame.from_dict(scores, orient='index')
+            # add total score column
+            df_scores['total_score'] = df_scores.sum(axis=1)
+            df_scores.columns = ['novelty', 'scalability', 'feasibility', 'impact', 'market potential', 'adherence to circular economy principles', 'total_score']
+            df = pd.concat([df, df_scores], axis=1)
+            st.dataframe(df)
 
         else:
             if user_input:
                 # Get predictions
-                scores = prediction(user_input)
+                scores = prediction(problem_input, user_input)
 
                 # Display scores
                 st.subheader("Evaluation Results:")
                 for criterion, score in scores.items():
-                    st.write(f"{criterion.capitalize()} Score: {score}/3")
+                    st.write(f"{criterion.capitalize()}: {score}/3")
                     st.progress(score / 3)
             else:
                 st.write("Please enter a solution to evaluate.")
         
             total_score = sum(scores.values())
-            animation(total_score, "Total Score (from 0 to 18)", "blue")
+            animation(total_score, "Total Score (from 0 to 21)", "blue")
 
     # section to explain how scores are calculated
     with st.expander("How are scores calculated?"):

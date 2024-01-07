@@ -2,3 +2,5 @@ streamlit
 transformers
 torch
 htbuilder
+sentence_transformers
+spacy
