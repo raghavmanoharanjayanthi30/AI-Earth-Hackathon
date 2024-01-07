@@ -40,8 +40,8 @@ def main():
     st.info("You can either enter a problem and solution to evaluate, or upload a csv file. Our models will analyze the problem and the solution and give based on different criteria.")
 
     # Text input from user
-    problem_input = st.text_area("Enter the problem here:")
-    user_input = st.text_area("Enter your solution here:")
+    problem_input = st.text_area("Enter the problem here:", value="Majority of cargo containers are abandoned post-usage, leading to extensive metal waste and environmental degradation, while urban areas face a shortage of parking spaces due to rapid urbanization.")
+    user_input = st.text_area("Enter your solution here:", value="We can leverage this situation by recycling and refurbishing these unused cargo containers to serve as portable garages. This would not only help to declutter the marine and dockyard spaces but also provide a sustainable, economic, and space-efficient solution for parking in congested urban areas. The containers can be refurbished with minimal energy input and subsequently leased out, creating a new revenue stream while contributing positively to the environment. This approach aligns with the circular economy‚Äôs principles of sharing, leasing and recycling.")
 
     # separate the 2 text areas with a delimiter
     st.write("---")
