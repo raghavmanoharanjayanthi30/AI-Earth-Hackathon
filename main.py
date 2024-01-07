@@ -3,22 +3,14 @@ import pandas as pd
 from utils import *
 from zsl_model import inference_zeroshot
 from nlp_model import compute_overall_rating
-from gemini_model import calculate_gemini_scores_and_explanations, calculate_gemini_scores
+from gemini_model import calculate_gemini_scores, generate_explanations
 
 
-def prediction(problem_input, solution_input, type='single'):
+def prediction(problem_input, solution_input):
     ''' Format is: {'novelty': 1, 'scalability': 1, 'feasibility': 1, 'impact': 1, 'market potential': 1, 'adherence to circular economy principles': 1} '''
     nlp_solution = compute_overall_rating(problem_input, solution_input)
     zsl_solution = inference_zeroshot(solution_input)
-    explanation = None
-    if type == 'single':
-        gemini_solution = calculate_gemini_scores_and_explanations(problem_input, solution_input)
-        explanation = dict()
-        for k in gemini_solution.keys():
-            explanation[k] = gemini_solution[k][1]
-        gemini_solution = {k: int(gemini_solution[k][0]) for k in gemini_solution.keys() if k != 'explanation'}
-    else:
-        gemini_solution = calculate_gemini_scores(problem_input, solution_input)
+    gemini_solution = calculate_gemini_scores(problem_input, solution_input)
     zsl_solution['relevance to problem'] = nlp_solution['relevance to problem']
     gemini_solution['relevance to problem'] = nlp_solution['relevance to problem']
     # put relevanve to problem first
@@ -31,7 +23,7 @@ def prediction(problem_input, solution_input, type='single'):
             zsl_solution[k] = 2
         else:
             zsl_solution[k] = max(set(solution_list), key = solution_list.count)
-    return zsl_solution, explanation
+    return zsl_solution
 
 # Streamlit interface
 def main():
@@ -53,7 +45,7 @@ def main():
             df = pd.read_csv(uploaded_file)
             scores = {}
             for index, row in df.iterrows():
-                scores[index], _ = prediction(row['problem'], row['solution'], type='multiple')
+                scores[index] = prediction(row['problem'], row['solution'])
             df_scores = pd.DataFrame.from_dict(scores, orient='index')
             # add total score column
             df_scores['total_score'] = df_scores.sum(axis=1)
@@ -64,7 +56,10 @@ def main():
         else:
             if user_input:
                 # Get predictions
-                scores, explanation = prediction(problem_input, user_input, type='single')
+                scores = prediction(problem_input, user_input)
+
+                # Get explanations
+                explanation = generate_explanations(scores, problem_input, user_input)
 
                 # Display scores
                 st.subheader("Evaluation Results:")
@@ -77,7 +72,7 @@ def main():
             total_score = sum(scores.values())
             animation(total_score, "Total Score (from 0 to 21)", "green")
             # Display explanation
-            with st.expander("See explanation"):
+            with st.expander("See explanations for the scores"):
                 for criterion, explanation in explanation.items():
                     # remove " " from beginning and end of string if it exists
                     explanation = explanation.strip()
