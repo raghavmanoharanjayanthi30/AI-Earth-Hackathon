@@ -3,27 +3,39 @@ import pandas as pd
 from utils import *
 from zsl_model import inference_zeroshot
 from nlp_model import compute_overall_rating
+from gemini_model import calculate_gemini_scores_and_explanations, calculate_gemini_scores
 
 
-def prediction(problem_input, solution_input):
+def prediction(problem_input, solution_input, type='single'):
     ''' Format is: {'novelty': 1, 'scalability': 1, 'feasibility': 1, 'impact': 1, 'market potential': 1, 'adherence to circular economy principles': 1} '''
     nlp_solution = compute_overall_rating(problem_input, solution_input)
-    print(nlp_solution)
     zsl_solution = inference_zeroshot(solution_input)
-    print(zsl_solution)
+    explanation = None
+    if type == 'single':
+        gemini_solution = calculate_gemini_scores(problem_input, solution_input)
+    else:
+        gemini_solution = calculate_gemini_scores_and_explanations(problem_input, solution_input)
+        explanation = gemini_solution['explanation']
+        gemini_solution = {k: gemini_solution[k] for k in gemini_solution.keys() if k != 'explanation'}
     zsl_solution['relevance to problem'] = nlp_solution['relevance to problem']
+    gemini_solution['relevance to problem'] = nlp_solution['relevance to problem']
     # put relevanve to problem first
     zsl_solution = {k: zsl_solution[k] for k in ['relevance to problem', 'novelty', 'scalability', 'feasibility', 'impact', 'market potential', 'adherence to circular economy principles']}
-    # take the average of the 2 models
-    for key in zsl_solution.keys():
-        zsl_solution[key] = (zsl_solution[key] + nlp_solution[key]) / 2
-    return zsl_solution
+    # majority vote between the 3 models
+    for k in zsl_solution.keys():
+        solution_list = [zsl_solution[k], gemini_solution[k], nlp_solution[k]]
+        # if all different
+        if len(set(solution_list)) == 3:
+            zsl_solution[k] = 2
+        else:
+            zsl_solution[k] = max(set(solution_list), key = solution_list.count)
+    return zsl_solution, explanation
 
 # Streamlit interface
 def main():
     st.title("AI EarthHack")
 
-    st.info("You can either enter a problem and solution to evaluate, or upload a csv file.")
+    st.info("You can either enter a problem and solution to evaluate, or upload a csv file. Our models will analyze the problem and the solution and give based on different criteria.")
 
     # Text input from user
     problem_input = st.text_area("Enter the problem here:")
@@ -39,7 +51,7 @@ def main():
             df = pd.read_csv(uploaded_file)
             scores = {}
             for index, row in df.iterrows():
-                scores[index] = prediction(row['solution'])
+                scores[index], _ = prediction(row['solution'])
             df_scores = pd.DataFrame.from_dict(scores, orient='index')
             # add total score column
             df_scores['total_score'] = df_scores.sum(axis=1)
@@ -50,18 +62,22 @@ def main():
         else:
             if user_input:
                 # Get predictions
-                scores = prediction(problem_input, user_input)
+                scores, explanation = prediction(problem_input, user_input)
 
                 # Display scores
                 st.subheader("Evaluation Results:")
                 for criterion, score in scores.items():
                     st.write(f"{criterion.capitalize()}: {score}/3")
                     st.progress(score / 3)
+                
+                # Display explanation
+                st.subheader("Explanation:")
+                st.write(explanation)
             else:
                 st.write("Please enter a solution to evaluate.")
         
             total_score = sum(scores.values())
-            animation(total_score, "Total Score (from 0 to 21)", "blue")
+            animation(total_score, "Total Score (from 0 to 21)", "green")
 
     # section to explain how scores are calculated
     with st.expander("How are scores calculated?"):

@@ -1,9 +1,8 @@
 import google.generativeai as genai
-
-import config_gemini_model
+import streamlit as st
 
 #Setting up Gemini model
-genai.configure(api_key = config_gemini_model.api_key)
+genai.configure(api_key = st.secrets["GEMINI_API_KEY"])
 model = genai.GenerativeModel('gemini-pro')
 
 metrics = ["novelty", "scalability", "feasibility", "impact", "market potential", "adherence to circular economy principles"]
