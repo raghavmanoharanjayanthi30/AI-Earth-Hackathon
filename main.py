@@ -13,10 +13,11 @@ def prediction(problem_input, solution_input, type='single'):
     explanation = None
     if type == 'single':
         gemini_solution = calculate_gemini_scores(problem_input, solution_input)
+        explanation = gemini_solution['explanation']
+        st.write(explanation)
+        gemini_solution = {k: gemini_solution[k] for k in gemini_solution.keys() if k != 'explanation'}
     else:
         gemini_solution = calculate_gemini_scores_and_explanations(problem_input, solution_input)
-        explanation = gemini_solution['explanation']
-        gemini_solution = {k: gemini_solution[k] for k in gemini_solution.keys() if k != 'explanation'}
     zsl_solution['relevance to problem'] = nlp_solution['relevance to problem']
     gemini_solution['relevance to problem'] = nlp_solution['relevance to problem']
     # put relevanve to problem first
@@ -51,7 +52,7 @@ def main():
             df = pd.read_csv(uploaded_file)
             scores = {}
             for index, row in df.iterrows():
-                scores[index], _ = prediction(row['solution'])
+                scores[index], _ = prediction(row['problem'], row['solution'], type='multiple')
             df_scores = pd.DataFrame.from_dict(scores, orient='index')
             # add total score column
             df_scores['total_score'] = df_scores.sum(axis=1)
@@ -62,22 +63,21 @@ def main():
         else:
             if user_input:
                 # Get predictions
-                scores, explanation = prediction(problem_input, user_input)
+                scores, explanation = prediction(problem_input, user_input, type='single')
 
                 # Display scores
                 st.subheader("Evaluation Results:")
                 for criterion, score in scores.items():
                     st.write(f"{criterion.capitalize()}: {score}/3")
                     st.progress(score / 3)
-                
-                # Display explanation
-                st.subheader("Explanation:")
-                st.write(explanation)
             else:
                 st.write("Please enter a solution to evaluate.")
         
             total_score = sum(scores.values())
             animation(total_score, "Total Score (from 0 to 21)", "green")
+            # Display explanation
+            st.subheader("Explanation:")
+            st.write(explanation)
 
     # section to explain how scores are calculated
     with st.expander("How are scores calculated?"):
